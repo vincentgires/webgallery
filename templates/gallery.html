@@ -1,0 +1,16 @@
+<html>
+  <title>Gallery</title>
+  <head>
+    <link rel="stylesheet" href='/static/style.css' />
+  </head>
+  <body>
+    <div><a href="..">back</div>
+    {% for image in images %}
+    <div class="thumbnail">
+      <a href={{ "medias/" + foldername + "/highres/" + image }}>
+          <img src={{ "medias/" + foldername + "/thumbnail/" + image }}>
+      </a>
+    </div>
+    {% endfor %}
+  </body>
+</html>

@@ -1,0 +1,13 @@
+<html>
+  <title>Gallery</title>
+  <head>
+    <link rel="stylesheet" href='/static/style.css' />
+  </head>
+  <body>
+    {% for gallery in galleries %}
+    <div class="gallery">
+      <a href={{ gallery }}><img src="/medias/{{ gallery }}/gallery.jpg" alt={{ gallery }}></a>
+    </div>
+    {% endfor %}
+  </body>
+</html>
