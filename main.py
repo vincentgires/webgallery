@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from flask import Flask, render_template, flash, request, redirect, url_for
+from flask import Flask, render_template, flash, request, redirect
 from werkzeug.utils import secure_filename
 import subprocess
 import logging
@@ -128,6 +128,8 @@ def upload_file():
     if request.method == 'POST':
         files = request.files.getlist('file')
         gallery_name = request.form['gallery_name']
+        if not gallery_name:
+            return redirect(request.url)
         folderpath = os.path.join(
             get_medias_folderpath(), gallery_name, HIGHRES_FOLDERNAME)
         if not os.path.exists(folderpath):
