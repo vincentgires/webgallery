@@ -89,7 +89,6 @@ def generate_gallery_thumbail(foldername):
         '-colorspace', 'srgb',
         output])
     subprocess.call(command)
-    pass
 
 
 # TODO
