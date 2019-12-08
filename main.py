@@ -4,6 +4,7 @@ import os
 from flask import Flask, render_template, flash, request, redirect
 from werkzeug.utils import secure_filename
 import subprocess
+import json
 import logging
 
 
@@ -14,6 +15,7 @@ THUMBNAIL_FOLDERNAME = 'thumbnail'
 GALLERY_IMG_WIDTH = 900
 GALLERY_IMG_HEIGHT = 150
 GALLERY_IMG_FILENAME = 'gallery.jpg'
+GALLERY_CONFIG_FILE = 'gallery.json'
 
 
 def get_medias_folderpath():
@@ -26,6 +28,14 @@ def get_gallery_folders():
     galleries = [
         i for i in os.listdir(folderpath)
         if os.path.isdir(os.path.join(folderpath, i))]
+    for i in galleries:
+        config_file = os.path.join(folderpath, i, GALLERY_CONFIG_FILE)
+        is_config = os.path.exists(config_file)
+        if is_config:
+            with open(config_file) as f:
+                config = json.load(f)
+                if config.get('private'):
+                    galleries.remove(i)
     return galleries
 
 
@@ -89,6 +99,11 @@ def generate_gallery_thumbail(foldername):
         '-colorspace', 'srgb',
         output])
     subprocess.call(command)
+
+
+def generate_gallery_zip():
+    pass
+
 
 
 # TODO
