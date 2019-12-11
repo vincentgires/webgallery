@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 from flask import Flask, render_template, flash, request, redirect
 from werkzeug.utils import secure_filename
