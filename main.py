@@ -17,11 +17,15 @@ COLLECTION_IMG_FILENAME = 'collection.jpg'
 COLLECTION_CONFIG_FILE = 'collection.json'
 
 app = Flask(__name__, template_folder='templates')
-app.add_url_rule('/medias', endpoint='medias')
+os.environ.get('GALLERY_PATH')
+app.add_url_rule(
+    ('/medias' if os.environ.get('GALLERY_PATH')
+     else app.static_url_path + '/medias'),
+    endpoint='medias')
 
 
 def get_collections_folderpath():
-    folderpath = os.environ.get('GALLERY_PATH')
+    folderpath = os.environ.get('GALLERY_PATH', app.static_folder)
     folderpath = os.path.join(folderpath, 'medias', 'collections')
     return folderpath
 
