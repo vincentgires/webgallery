@@ -1,12 +1,12 @@
 <html>
   <title>Gallery</title>
   <head>
-    <link rel="stylesheet" href='/static/style.css' />
+    <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    {% for gallery in galleries %}
+    {% for collection in collections %}
     <div class="gallery">
-      <a href={{ gallery }}><img src="/medias/{{ gallery }}/gallery.jpg" alt={{ gallery }}></a>
+      <a href={{ url_for('show_collection', name=collection) }}><img src="{{ url_for('medias') }}/collections/{{ collection }}/collection.jpg" alt={{ collection }}></a>
     </div>
     {% endfor %}
   </body>

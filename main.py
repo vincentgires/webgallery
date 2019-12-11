@@ -8,28 +8,31 @@ import json
 import logging
 
 
-app = Flask(__name__, template_folder='templates')
 SUPPORTED_IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif']
 HIGHRES_FOLDERNAME = 'highres'
 THUMBNAIL_FOLDERNAME = 'thumbnail'
 GALLERY_IMG_WIDTH = 900
 GALLERY_IMG_HEIGHT = 150
-GALLERY_IMG_FILENAME = 'gallery.jpg'
-GALLERY_CONFIG_FILE = 'gallery.json'
+COLLECTION_IMG_FILENAME = 'collection.jpg'
+COLLECTION_CONFIG_FILE = 'collection.json'
+
+app = Flask(__name__, template_folder='templates')
+app.add_url_rule('/medias', endpoint='medias')
 
 
-def get_medias_folderpath():
+def get_collections_folderpath():
     folderpath = os.environ.get('GALLERY_PATH')
+    folderpath = os.path.join(folderpath, 'medias', 'collections')
     return folderpath
 
 
-def get_gallery_folders():
-    folderpath = get_medias_folderpath()
+def get_collection_folders():
+    folderpath = get_collections_folderpath()
     galleries = [
         i for i in os.listdir(folderpath)
         if os.path.isdir(os.path.join(folderpath, i))]
     for i in galleries:
-        config_file = os.path.join(folderpath, i, GALLERY_CONFIG_FILE)
+        config_file = os.path.join(folderpath, i, COLLECTION_CONFIG_FILE)
         is_config = os.path.exists(config_file)
         if is_config:
             with open(config_file) as f:
@@ -41,7 +44,7 @@ def get_gallery_folders():
 
 def get_images(foldername, imagetype, fullpath=False):
     folderpath = os.path.join(
-        get_medias_folderpath(),
+        get_collections_folderpath(),
         foldername,
         imagetype)
     if os.path.isdir(folderpath):
@@ -84,9 +87,9 @@ def generate_gallery_thumbail(foldername):
     # exclude gif to avoid each images to be in the gallery thumbnail
     inputs = [i for i in inputs if os.path.splitext(i)[1] != '.gif']
     output = os.path.join(
-        get_medias_folderpath(),
+        get_collections_folderpath(),
         foldername,
-        GALLERY_IMG_FILENAME)
+        COLLECTION_IMG_FILENAME)
     img_width = GALLERY_IMG_WIDTH / len(inputs)
     command = ['magick', 'montage']
     command.extend(inputs)
@@ -101,9 +104,9 @@ def generate_gallery_thumbail(foldername):
     subprocess.call(command)
 
 
+# TODO
 def generate_gallery_zip():
     pass
-
 
 
 # TODO
@@ -114,26 +117,26 @@ def delete_media():
 
 @app.route('/')
 def index():
-    return render_template('index.html', galleries=get_gallery_folders())
+    return render_template('index.html', collections=get_collection_folders())
 
 
-@app.route('/tag')
+# TODO
+@app.route('/tags')
 def show_tags():
-    # TODO
     return '''
         <!doctype html>
         <title>Tags</title>
         <h1>Tags</h1>'''
 
 
-@app.route('/<foldername>')
-def show_gallery(foldername):
+@app.route('/collections/<name>')
+def show_collection(name):
     images = (
-        get_images(foldername=foldername, imagetype=THUMBNAIL_FOLDERNAME)
+        get_images(foldername=name, imagetype=THUMBNAIL_FOLDERNAME)
         or [])
     return render_template(
-        'gallery.html',
-        foldername=foldername,
+        'collection.html',
+        collection_name=name,
         images=images)
 
 
@@ -141,11 +144,11 @@ def show_gallery(foldername):
 def upload_file():
     if request.method == 'POST':
         files = request.files.getlist('file')
-        gallery_name = request.form['gallery_name']
-        if not gallery_name:
+        collection_name = request.form['collection_name']
+        if not collection_name:
             return redirect(request.url)
         folderpath = os.path.join(
-            get_medias_folderpath(), gallery_name, HIGHRES_FOLDERNAME)
+            get_collections_folderpath(), collection_name, HIGHRES_FOLDERNAME)
         if not os.path.exists(folderpath):
             os.makedirs(folderpath)
         for file in files:
