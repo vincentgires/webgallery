@@ -12,5 +12,13 @@
       </a>
     </div>
     {% endfor %}
+    {% for video in videos %}
+    <div>
+      <video width="960" height="540" controls>
+        <source src={{ url_for('medias') }}/collections/{{ collection_name }}/videos/{{ video }} type="video/webm">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    {% endfor %}
   </body>
 </html>

@@ -7,6 +7,7 @@ import logging
 
 
 SUPPORTED_IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif']
+SUPPORTED_VIDEO_EXT = ['.mkv', '.webm', '.ogg', 'ogv', '.mp4', '.mov']
 HIGHRES_FOLDERNAME = 'highres'
 THUMBNAIL_FOLDERNAME = 'thumbnail'
 GALLERY_IMG_WIDTH = 900
@@ -46,9 +47,7 @@ def get_collection_folders():
 
 def get_images(foldername, imagetype, fullpath=False):
     folderpath = os.path.join(
-        get_collections_folderpath(),
-        foldername,
-        imagetype)
+        get_collections_folderpath(), foldername, imagetype)
     if os.path.isdir(folderpath):
         images = [
             i for i in sorted(os.listdir(folderpath))
@@ -56,6 +55,16 @@ def get_images(foldername, imagetype, fullpath=False):
         if fullpath:
             return [os.path.join(folderpath, i) for i in images]
         return images
+
+
+def get_videos(foldername):
+    folderpath = os.path.join(
+        get_collections_folderpath(), foldername, 'videos')
+    if os.path.isdir(folderpath):
+        videos = [
+            i for i in sorted(os.listdir(folderpath))
+            if os.path.splitext(i)[1].lower() in SUPPORTED_VIDEO_EXT]
+        return videos
 
 
 def generate_media_thumbail(filepath):
@@ -134,12 +143,11 @@ def show_tags():
 @app.route('/collections/<name>')
 def show_collection(name):
     images = (
-        get_images(foldername=name, imagetype=THUMBNAIL_FOLDERNAME)
-        or [])
+        get_images(foldername=name, imagetype=THUMBNAIL_FOLDERNAME) or [])
+    videos = get_videos(foldername=name) or []
     return render_template(
-        'collection.html',
-        collection_name=name,
-        images=images)
+        'collection.html', collection_name=name,
+        images=images, videos=videos)
 
 
 @app.route('/add', methods=['GET', 'POST'])
