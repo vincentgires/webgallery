@@ -2,23 +2,37 @@ body {
   background-color: #303030;
   color: #ffffff;
 }
+
 div.gallery {
   padding: 5px;
   height: 150px;
   margin: auto;
   text-align: center;
 }
+
 div.gallery img {
   height: 100%;
   width: 900px;
 }
+
 div.thumbnail {
   margin: 3px;
   float: left;
   height: 250px;
   width: auto;
 }
+
 div.thumbnail img {
   height: 100%;
+  width: auto;
+}
+
+div.video {
+  margin: 3px;
+  float: left;
+}
+
+div.video video {
+  height: 250px;
   width: auto;
 }
