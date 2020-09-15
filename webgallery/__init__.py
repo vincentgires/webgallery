@@ -18,14 +18,14 @@ COLLECTION_CONFIG_FILE = 'collection.json'
 app = Flask(__name__, template_folder='templates')
 os.environ.get('GALLERY_PATH')
 app.add_url_rule(
-    ('/medias' if os.environ.get('GALLERY_PATH')
-     else app.static_url_path + '/medias'),
-    endpoint='medias')
+    ('/media' if os.environ.get('GALLERY_PATH')
+     else app.static_url_path + '/media'),
+    endpoint='media')
 
 
 def get_collections_folderpath():
     folderpath = os.environ.get('GALLERY_PATH', app.static_folder)
-    folderpath = os.path.join(folderpath, 'medias', 'collections')
+    folderpath = os.path.join(folderpath, 'media', 'collections')
     return folderpath
 
 
@@ -134,6 +134,7 @@ def index():
 # TODO
 @app.route('/tags')
 def show_tags():
+    tags = request.args.getlist('tag')
     return '''
         <!doctype html>
         <title>Tags</title>
