@@ -6,6 +6,10 @@
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
+    <form method="post" enctype="multipart/form-data">
+      tags <input type="text" name="tags" value="{{ ', '.join(request.args.getlist('tag')) }}">
+      <input type="submit" value="search">
+    </form>
     <div><a href="..">back</div>
     {% for image in images %}
     <div class="thumbnail">

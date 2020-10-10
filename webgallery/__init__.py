@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, flash, request, redirect
+from flask import Flask, render_template, flash, request, redirect, url_for
 from werkzeug.utils import secure_filename
 import subprocess
 import json
@@ -120,6 +120,21 @@ def generate_gallery_thumbail(foldername):
     subprocess.call(command)
 
 
+def get_photos_from_tags(tags):
+    photos_path = os.path.join(get_media_folderpath(), 'photos')
+    json_files = [
+        i for i in sorted(os.listdir(photos_path))
+        if i.endswith('.json')]
+    images = []
+    for j in json_files:
+        with open(os.path.join(photos_path, j)) as f:
+            data = json.load(f)
+        if all(x in data['tags'] for x in tags):
+            image = os.path.splitext(j)[0] + '.jpg'
+            images.append(image)
+    return images
+
+
 # TODO
 def generate_gallery_zip():
     pass
@@ -136,22 +151,25 @@ def index():
     return render_template('index.html', collections=get_collection_folders())
 
 
-@app.route('/tags')
-def show_tags():
-    # adress.net/tags?tag=value&tag=value
-    tags = request.args.getlist('tag')
-    photos_path = os.path.join(get_media_folderpath(), 'photos')
-    json_files = [
-        i for i in sorted(os.listdir(photos_path))
-        if i.endswith('.json')]
-    images = []
-    for j in json_files:
-        with open(os.path.join(photos_path, j)) as f:
-            data = json.load(f)
-        if all(x in data['tags'] for x in tags):
-            image = os.path.splitext(j)[0] + '.jpg'
-            images.append(image)
-    return render_template('tags.html', images=images)
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    # TODO
+    # date = request.args.get('date')
+    # from datetime import datetime
+    # datetime_taken = '2016:04:05 09:43:01'
+    # datetime.strptime(datetime_taken, '%Y:%m:%d %H:%M:%S')
+
+    if request.method == 'POST':
+        tags = request.form.get('tags').split(',')
+        tags = [t.lstrip() for t in tags]
+        return redirect(url_for('search', tag=tags))
+
+    elif request.method == 'GET':
+        # adress.net/search?tag=value&tag=value
+        tags = request.args.getlist('tag')
+        tags = [t.lstrip() for t in tags]
+        images = get_photos_from_tags(tags)
+        return render_template('search.html', images=images)
 
 
 @app.route('/collections/<name>')
