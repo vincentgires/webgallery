@@ -121,11 +121,13 @@ def generate_gallery_thumbail(foldername):
 
 
 def get_photos_from_tags(tags):
+    images = []
+    if not tags:
+        return images
     photos_path = os.path.join(get_media_folderpath(), 'photos')
     json_files = [
         i for i in sorted(os.listdir(photos_path))
         if i.endswith('.json')]
-    images = []
     for j in json_files:
         with open(os.path.join(photos_path, j)) as f:
             data = json.load(f)
@@ -160,9 +162,12 @@ def search():
     # datetime.strptime(datetime_taken, '%Y:%m:%d %H:%M:%S')
 
     if request.method == 'POST':
-        tags = request.form.get('tags').split(',')
-        tags = [t.lstrip() for t in tags]
-        return redirect(url_for('search', tag=tags))
+        args = {}
+        tags = request.form.get('tags')
+        if tags:
+            tags = [t.lstrip() for t in tags.split(',')]
+            args['tag'] = tags
+        return redirect(url_for('search', **args))
 
     elif request.method == 'GET':
         # adress.net/search?tag=value&tag=value
