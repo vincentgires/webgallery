@@ -142,7 +142,7 @@ def show_tags():
     tags = request.args.getlist('tag')
     photos_path = os.path.join(get_media_folderpath(), 'photos')
     json_files = [
-        i for i in os.listdir(photos_path)
+        i for i in sorted(os.listdir(photos_path))
         if i.endswith('.json')]
     images = []
     for j in json_files:
@@ -151,7 +151,6 @@ def show_tags():
         if all(x in data['tags'] for x in tags):
             image = os.path.splitext(j)[0] + '.jpg'
             images.append(image)
-            print(image)
     return render_template('tags.html', images=images)
 
 
