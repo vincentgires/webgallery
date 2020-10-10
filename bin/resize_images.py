@@ -4,8 +4,17 @@ import sys
 import os
 import subprocess
 
-arg_output = sys.argv[-1]
+arg_size = sys.argv[-3]
 arg_input = sys.argv[-2]
+arg_output = sys.argv[-1]
+
+resolution = {
+    'thumbnail': '300x300',
+    'highres': '2048x2048'}
+if arg_size not in resolution:
+    size = arg_size
+else:
+    size = resolution[arg_size]
 
 
 def resize_file(filepath, outputdir):
@@ -17,7 +26,7 @@ def resize_file(filepath, outputdir):
         'magick', 'convert',
         filepath,
         '-colorspace', 'rgb',
-        '-resize', '300x300',
+        '-resize', size,
         '-colorspace', 'srgb',
         outputpath]
     print(command)
@@ -25,6 +34,8 @@ def resize_file(filepath, outputdir):
     return outputpath
 
 
-images = [os.path.join(arg_input, i) for i in sorted(os.listdir(arg_input))]
+images = [
+    os.path.join(arg_input, i) for i in sorted(os.listdir(arg_input))
+    if i.endswith('.jpg')]
 for filepath in images:
     resize_file(filepath, arg_output)
