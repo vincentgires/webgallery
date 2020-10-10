@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <title>Gallery</title>
+  <head>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div><a href="..">back</div>
+    {% for image in images %}
+    <div class="thumbnail">
+      <a href={{ url_for('media') }}/photos/highres/{{ image }}>
+          <img src={{ url_for('media') }}/photos/thumbnails/{{ image }} alt={{ image }}>
+      </a>
+    </div>
+    {% endfor %}
+  </body>
+</html>

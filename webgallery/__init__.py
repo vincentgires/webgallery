@@ -16,11 +16,16 @@ COLLECTION_IMG_FILENAME = 'collection.jpg'
 COLLECTION_CONFIG_FILE = 'collection.json'
 
 app = Flask(__name__, template_folder='templates')
-os.environ.get('GALLERY_PATH')
 app.add_url_rule(
     ('/media' if os.environ.get('GALLERY_PATH')
      else app.static_url_path + '/media'),
     endpoint='media')
+
+
+def get_media_folderpath():
+    folderpath = os.environ.get('GALLERY_PATH', app.static_folder)
+    folderpath = os.path.join(folderpath, 'media')
+    return folderpath
 
 
 def get_collections_folderpath():
@@ -131,14 +136,23 @@ def index():
     return render_template('index.html', collections=get_collection_folders())
 
 
-# TODO
 @app.route('/tags')
 def show_tags():
+    # adress.net/tags?tag=value&tag=value
     tags = request.args.getlist('tag')
-    return '''
-        <!doctype html>
-        <title>Tags</title>
-        <h1>Tags</h1>'''
+    photos_path = os.path.join(get_media_folderpath(), 'photos')
+    json_files = [
+        i for i in os.listdir(photos_path)
+        if i.endswith('.json')]
+    images = []
+    for j in json_files:
+        with open(os.path.join(photos_path, j)) as f:
+            data = json.load(f)
+        if all(x in data['tags'] for x in tags):
+            image = os.path.splitext(j)[0] + '.jpg'
+            images.append(image)
+            print(image)
+    return render_template('tags.html', images=images)
 
 
 @app.route('/collections/<name>')
