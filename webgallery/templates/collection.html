@@ -9,15 +9,15 @@
     <div><a href="..">back</div>
     {% for image in images %}
     <div class="thumbnail">
-      <a href={{ url_for('media') }}/collections/{{ collection_name }}/highres/{{ image }}>
-          <img src={{ url_for('media') }}/collections/{{ collection_name }}/thumbnail/{{ image }} alt={{ image }}>
+      <a href={{ url_for('media') }}/photos/highres/{{ image }}>
+          <img src={{ url_for('media') }}/photos/thumbnails/{{ image }} alt={{ image }}>
       </a>
     </div>
     {% endfor %}
     {% for video in videos %}
     <div class="video">
       <video controls>
-        <source src={{ url_for('media') }}/collections/{{ collection_name }}/videos/{{ video }} type="video/webm">
+        <source src={{ url_for('media') }}/videos/{{ video }} type="video/webm">
         Your browser does not support the video tag.
       </video>
     </div>

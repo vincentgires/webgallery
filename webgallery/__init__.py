@@ -121,16 +121,16 @@ def generate_gallery_thumbail(foldername):
     subprocess.call(command)
 
 
-def get_photos_json():
-    photos_path = os.path.join(get_media_folderpath(), 'photos')
-    return [i for i in sorted(os.listdir(photos_path)) if i.endswith('.json')]
+def get_json_files(category):
+    path = os.path.join(get_media_folderpath(), category)
+    return [i for i in sorted(os.listdir(path)) if i.endswith('.json')]
 
 
 def get_photos_from_search(tags=None, date=None):
     tags_images = []
     date_images = []
     photos_path = os.path.join(get_media_folderpath(), 'photos')
-    for j in get_photos_json():
+    for j in get_json_files('photos'):
         with open(os.path.join(photos_path, j)) as f:
             data = json.load(f)
         image = os.path.splitext(j)[0] + '.jpg'
@@ -165,7 +165,16 @@ def delete_media():
 
 @app.route('/')
 def index():
-    return render_template('index.html', collections=get_collection_folders())
+    collections_path = os.path.join(get_media_folderpath(), 'collections')
+    collections = []
+    for i in get_json_files('collections'):
+        with open(os.path.join(collections_path, i)) as f:
+            data = json.load(f)
+            if data.get('private', False):
+                continue
+            image = os.path.splitext(i)[0]
+            collections.append(image)
+    return render_template('index.html', collections=collections)
 
 
 @app.route('/search', methods=['GET', 'POST'])
@@ -192,12 +201,13 @@ def search():
 
 @app.route('/collections/<name>')
 def show_collection(name):
-    images = (
-        get_images(foldername=name, imagetype=THUMBNAIL_FOLDERNAME) or [])
-    videos = get_videos(foldername=name) or []
+    collections_path = os.path.join(get_media_folderpath(), 'collections')
+    with open(os.path.join(collections_path, name + '.json')) as f:
+        data = json.load(f)
+        images = data.get('photos') or []
+        videos = data.get('videos') or []
     return render_template(
-        'collection.html', collection_name=name,
-        images=images, videos=videos)
+        'collection.html', collection_name=name, images=images, videos=videos)
 
 
 @app.route('/add', methods=['GET', 'POST'])
