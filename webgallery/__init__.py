@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import subprocess
 import json
 import logging
+from datetime import datetime
 
 
 SUPPORTED_IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif']
@@ -120,20 +121,34 @@ def generate_gallery_thumbail(foldername):
     subprocess.call(command)
 
 
-def get_photos_from_tags(tags):
-    images = []
-    if not tags:
-        return images
+def get_photos_json():
     photos_path = os.path.join(get_media_folderpath(), 'photos')
-    json_files = [
-        i for i in sorted(os.listdir(photos_path))
-        if i.endswith('.json')]
-    for j in json_files:
+    return [i for i in sorted(os.listdir(photos_path)) if i.endswith('.json')]
+
+
+def get_photos_from_search(tags=None, date=None):
+    tags_images = []
+    date_images = []
+    photos_path = os.path.join(get_media_folderpath(), 'photos')
+    for j in get_photos_json():
         with open(os.path.join(photos_path, j)) as f:
             data = json.load(f)
-        if all(x in data['tags'] for x in tags):
-            image = os.path.splitext(j)[0] + '.jpg'
-            images.append(image)
+        image = os.path.splitext(j)[0] + '.jpg'
+        if tags is not None:
+            if all(x in data['tags'] for x in tags):
+                tags_images.append(image)
+        if date is not None:
+            dt = datetime.strptime(
+                data['exifs']['datetime_taken'], '%Y:%m:%d %H:%M:%S')
+            if date == dt.strftime('%Y-%m-%d'):
+                date_images.append(image)
+    if tags is not None:
+        images = tags_images
+    elif date is not None:
+        images = date_images
+    if tags is not None and date is not None:
+        # Return only images that matches all criteria
+        images = set.intersection(*map(set, [tags_images, date_images]))
     return images
 
 
@@ -155,25 +170,23 @@ def index():
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
-    # TODO
-    # date = request.args.get('date')
-    # from datetime import datetime
-    # datetime_taken = '2016:04:05 09:43:01'
-    # datetime.strptime(datetime_taken, '%Y:%m:%d %H:%M:%S')
-
     if request.method == 'POST':
         args = {}
         tags = request.form.get('tags')
+        date = request.form.get('date')
         if tags:
             tags = [t.lstrip() for t in tags.split(',')]
             args['tag'] = tags
+        if date:
+            args['date'] = date
         return redirect(url_for('search', **args))
 
     elif request.method == 'GET':
         # adress.net/search?tag=value&tag=value
         tags = request.args.getlist('tag')
         tags = [t.lstrip() for t in tags]
-        images = get_photos_from_tags(tags)
+        date = request.args.get('date')
+        images = get_photos_from_search(tags, date)
         return render_template('search.html', images=images)
 
 
