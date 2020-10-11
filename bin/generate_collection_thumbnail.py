@@ -3,13 +3,17 @@
 import sys
 import os
 import subprocess
+import json
 
 GALLERY_IMG_WIDTH = 900
 GALLERY_IMG_HEIGHT = 150
-arg_input = sys.argv[-1]
+
+arg_json = sys.argv[-3]
+arg_images_folder = sys.argv[-2]
+arg_output_image = sys.argv[-1]
 
 
-def generate_gallery_thumbail(inputs, output):
+def generate_collection_thumbail(inputs, output):
     # exclude gif to avoid each images to be in the gallery thumbnail
     inputs = [i for i in inputs if os.path.splitext(i)[1] != '.gif']
     img_width = GALLERY_IMG_WIDTH / len(inputs)
@@ -22,10 +26,12 @@ def generate_gallery_thumbail(inputs, output):
         '-mode', 'concatenate',
         '-tile', 'x1',
         '-colorspace', 'srgb',
-        os.path.join(output, 'collection.jpg')])
+        output])
     subprocess.call(command)
 
 
-images = [os.path.join(arg_input, i) for i in sorted(os.listdir(arg_input))]
-output, _ = os.path.split(arg_input)
-generate_gallery_thumbail(images, output)
+with open(arg_json) as f:
+    data = json.load(f)
+
+images = [os.path.join(arg_images_folder, i) for i in data['photos']]
+generate_collection_thumbail(images, arg_output_image)
