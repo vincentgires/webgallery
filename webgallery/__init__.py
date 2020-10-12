@@ -31,7 +31,8 @@ def get_photos_from_search(tags=None, date=None):
     for j in get_json_files('photos'):
         with open(os.path.join(photos_path, j)) as f:
             data = json.load(f)
-        image = os.path.splitext(j)[0] + '.jpg'
+        # json root name should be the image filename
+        image = os.path.splitext(j)[0]
         if tags is not None:
             if all(x in data['tags'] for x in tags):
                 tags_images.append(image)
