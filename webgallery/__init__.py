@@ -6,16 +6,6 @@ import json
 import logging
 from datetime import datetime
 
-
-SUPPORTED_IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif']
-SUPPORTED_VIDEO_EXT = ['.mkv', '.webm', '.ogg', 'ogv', '.mp4', '.mov']
-HIGHRES_FOLDERNAME = 'highres'
-THUMBNAIL_FOLDERNAME = 'thumbnail'
-GALLERY_IMG_WIDTH = 900
-GALLERY_IMG_HEIGHT = 150
-COLLECTION_IMG_FILENAME = 'collection.jpg'
-COLLECTION_CONFIG_FILE = 'collection.json'
-
 app = Flask(__name__, template_folder='templates')
 app.add_url_rule(
     ('/media' if os.environ.get('GALLERY_PATH')
