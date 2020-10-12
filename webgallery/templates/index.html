@@ -8,7 +8,7 @@
   <body>
     {% for collection in collections %}
     <div class="gallery">
-      <a href="{{ url_for('show_collection', name=collection) }}"><img src="{{ url_for('media') }}/collections/{{ collection }}.jpg" alt="{{ collection }}"></a>
+      <a href="{{ url_for('show_collection', name=collection) }}"><img src="{{ url_for('media') }}/collections/{{ collection }}.jpg" loading="lazy" alt="{{ collection }}"></a>
     </div>
     {% endfor %}
   </body>

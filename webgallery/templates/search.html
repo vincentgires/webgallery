@@ -15,7 +15,7 @@
     {% for image in images %}
     <div class="thumbnail">
       <a href="{{ url_for('media') }}/photos/highres/{{ image }}">
-          <img src="{{ url_for('media') }}/photos/thumbnails/{{ image }}" alt="{{ image }}">
+          <img src="{{ url_for('media') }}/photos/thumbnails/{{ image }}" loading="lazy" alt="{{ image }}">
       </a>
     </div>
     {% endfor %}
