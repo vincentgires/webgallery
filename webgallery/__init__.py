@@ -24,7 +24,7 @@ def get_json_files(category):
     return [i for i in sorted(os.listdir(path)) if i.endswith('.json')]
 
 
-def get_photos_from_search(tags=None, date=None):
+def get_photos_from_search(tags=None, date=None, to_date=None):
     tags_images = []
     date_images = []
     photos_path = os.path.join(get_media_folderpath(), 'photos')
@@ -39,7 +39,12 @@ def get_photos_from_search(tags=None, date=None):
         if date is not None:
             dt = datetime.strptime(
                 data['exifs']['datetime_taken'], '%Y:%m:%d %H:%M:%S')
-            if date == dt.strftime('%Y-%m-%d'):
+            if to_date is not None:
+                dt_date = datetime.strptime(date, '%Y-%m-%d')
+                dt_to_date = datetime.strptime(to_date, '%Y-%m-%d')
+                if dt_date <= dt <= dt_to_date:
+                    date_images.append(image)
+            elif date == dt.strftime('%Y-%m-%d'):
                 date_images.append(image)
     if tags is not None:
         images = tags_images
@@ -82,11 +87,14 @@ def search():
         args = {}
         tags = request.form.get('tags')
         date = request.form.get('date')
+        to_date = request.form.get('to_date')
         if tags:
             tags = [t.lstrip() for t in tags.split(',')]
             args['tag'] = tags
         if date:
             args['date'] = date
+        if to_date:
+            args['to_date'] = to_date
         return redirect(url_for('search', **args))
 
     elif request.method == 'GET':
@@ -94,7 +102,8 @@ def search():
         tags = request.args.getlist('tag')
         tags = [t.lstrip() for t in tags]
         date = request.args.get('date')
-        images = get_photos_from_search(tags, date)
+        to_date = request.args.get('to_date')
+        images = get_photos_from_search(tags, date, to_date)
         return render_template('search.html', images=images)
 
 
