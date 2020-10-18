@@ -37,8 +37,10 @@ def get_photos_from_search(tags=None, date=None, to_date=None):
             if all(x in data['tags'] for x in tags):
                 tags_images.append(image)
         if date is not None:
-            dt = datetime.strptime(
-                data['exifs']['datetime_taken'], '%Y:%m:%d %H:%M:%S')
+            # skip  %H:%M:%S to be able te compare better with selected
+            # date and to_date that does not have it and risk to make errors
+            ymd_date = data['exifs']['datetime_taken'].split(' ')[0]
+            dt = datetime.strptime(ymd_date, '%Y:%m:%d')
             if to_date is not None:
                 dt_date = datetime.strptime(date, '%Y-%m-%d')
                 dt_to_date = datetime.strptime(to_date, '%Y-%m-%d')
