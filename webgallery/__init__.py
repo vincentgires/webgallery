@@ -54,7 +54,8 @@ def get_photos_from_search(tags=None, date=None, to_date=None):
         images = date_images
     if tags is not None and date is not None:
         # Return only images that matches all criteria
-        images = set.intersection(*map(set, [tags_images, date_images]))
+        images = sorted(
+            set.intersection(*map(set, [tags_images, date_images])))
     return images
 
 
