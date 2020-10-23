@@ -5,6 +5,8 @@ import subprocess
 import json
 import logging
 from datetime import datetime
+import sqlite3
+from jinja2 import Template
 
 app = Flask(__name__, template_folder='templates')
 app.add_url_rule(
@@ -24,7 +26,14 @@ def get_json_files(category):
     return [i for i in sorted(os.listdir(path)) if i.endswith('.json')]
 
 
-def get_photos_from_search(tags=None, date=None, to_date=None):
+def get_database_path():
+    if os.environ.get('GALLERY_PATH') is not None:
+        return os.path.join(os.environ.get('GALLERY_PATH'), 'database.db')
+    else:
+        return 'database.db'
+
+
+def find_images_from_json(tags=None, date=None, to_date=None):
     tags_images = []
     date_images = []
     photos_path = os.path.join(get_media_folderpath(), 'photos')
@@ -37,7 +46,7 @@ def get_photos_from_search(tags=None, date=None, to_date=None):
             if all(x in data['tags'] for x in tags):
                 tags_images.append(image)
         if date is not None:
-            # skip  %H:%M:%S to be able te compare better with selected
+            # skip  %H:%M:%S to be able to compare better with selected
             # date and to_date that does not have it and risk to make errors
             ymd_date = data['exifs']['datetime_taken'].split(' ')[0]
             dt = datetime.strptime(ymd_date, '%Y:%m:%d')
@@ -57,6 +66,37 @@ def get_photos_from_search(tags=None, date=None, to_date=None):
         images = sorted(
             set.intersection(*map(set, [tags_images, date_images])))
     return images
+
+
+def find_images_from_database(tags=None, date=None, to_date=None):
+    tags = tags or []
+    connexion = sqlite3.connect(get_database_path())
+    cursor = connexion.cursor()
+    query = '''select filename, strftime('%Y-%m-%d', date)  from images
+{% for t in tags %}
+    inner join tagged_images as image_tag_{{loop.index}} on image_tag_{{loop.index}}.image_filename = images.filename
+    inner join tags as tag_{{loop.index}} on tag_{{loop.index}}.id = image_tag_{{loop.index}}.tag_id
+{% endfor %}
+
+{% if tags %}
+    where {% for t in tags %}tag_{{loop.index}}.name = ?{{" and " if not loop.last}}{% endfor %}
+{% endif %}
+
+{% if date and not tags %}
+    where
+{% elif tags and date %}
+    and
+{% endif %}
+{% if date %}
+    date >= '{{date}}' and date <= '{% if to_date %}{{to_date}}{% else %}{{date}}{% endif %} 23:59:59.999'
+{% endif %}
+
+order by images.date'''
+    query = Template(query).render(tags=tags, date=date, to_date=to_date)
+    cursor.execute(query, tags)
+    result = [r[0] for r in cursor.fetchall()]
+    connexion.close()
+    return result
 
 
 # TODO
@@ -106,7 +146,8 @@ def search():
         tags = [t.lstrip() for t in tags]
         date = request.args.get('date')
         to_date = request.args.get('to_date')
-        images = get_photos_from_search(tags, date, to_date)
+        # images = find_images_from_json(tags, date, to_date)
+        images = find_images_from_database(tags, date, to_date)
         return render_template('search.html', images=images)
 
 
@@ -144,5 +185,58 @@ def upload_file():
     return render_template('add.html')
 
 
+def create_or_update_database_from_json():
+    # TODO: remove from database if json does not exist anymore
+    connexion = sqlite3.connect(get_database_path())
+    cursor = connexion.cursor()
+    cursor.execute(
+        'create table if not exists images(filename text unique, date text)')
+    cursor.execute(
+        'create table if not exists '
+        'tags(id integer primary key autoincrement unique, name text unique)')
+    cursor.execute(
+        'create table if not exists '
+        'tagged_images(image_filename text, tag_id text)')
+
+    photos_path = os.path.join(get_media_folderpath(), 'photos')
+    for j in get_json_files('photos'):
+        with open(os.path.join(photos_path, j)) as f:
+            data = json.load(f)
+        filename = os.path.splitext(j)[0]
+        date = data['exifs']['datetime_taken']
+        # convert date to interpretable format for sqlite
+        dt = datetime.strptime(date, '%Y:%m:%d %H:%M:%S')
+        date = dt.strftime('%Y-%m-%d %H:%M:%S')
+
+        cursor.execute('select * from images where filename = ?', (filename,))
+        image_exist = cursor.fetchone()
+        if image_exist is None:
+            cursor.execute(
+                'insert into images(filename, date) values (?, ?)',
+                (filename, date))
+
+        for tag in data['tags']:
+            cursor.execute('select * from tags where name = ?', (tag,))
+            result = cursor.fetchone()
+            if result is None:
+                cursor.execute('insert into tags(name) values (?)', (tag,))
+                tag_id = cursor.lastrowid
+            else:
+                tag_id = result[0]
+
+            # Don't add new tag/image association if they are already linked
+            cursor.execute(
+                'select * from tagged_images where '
+                'image_filename = ? and tag_id = ?', (filename, tag_id))
+            if cursor.fetchone() is None:
+                cursor.execute(
+                    'insert into tagged_images(image_filename, tag_id) '
+                    'values (?, ?)', (filename, tag_id))
+
+    connexion.commit()
+    connexion.close()
+
+
 if __name__ == '__main__':
+    create_or_update_database_from_json()
     app.run(debug=True)
