@@ -126,6 +126,12 @@ def index():
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
+    connexion = sqlite3.connect(get_database_path())
+    cursor = connexion.cursor()
+    cursor.execute('select name from tags')
+    available_tags = sorted([r[0] for r in cursor.fetchall()])
+    connexion.close()
+
     if request.method == 'POST':
         args = {}
         tags = request.form.get('tags')
@@ -148,7 +154,8 @@ def search():
         to_date = request.args.get('to_date')
         # images = find_images_from_json(tags, date, to_date)
         images = find_images_from_database(tags, date, to_date)
-        return render_template('search.html', images=images)
+        return render_template(
+            'search.html', images=images, available_tags=available_tags)
 
 
 @app.route('/collections/<name>')
