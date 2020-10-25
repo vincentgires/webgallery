@@ -238,5 +238,5 @@ def create_or_update_database_from_json():
 
 
 if __name__ == '__main__':
-    create_or_update_database_from_json()
+    # create_or_update_database_from_json()
     app.run(debug=True)
