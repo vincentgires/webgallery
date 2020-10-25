@@ -125,6 +125,7 @@ def index():
 
 
 @app.route('/search', methods=['GET', 'POST'])
+@app.route('/recherche', methods=['GET', 'POST'])
 def search():
     connexion = sqlite3.connect(get_database_path())
     cursor = connexion.cursor()
