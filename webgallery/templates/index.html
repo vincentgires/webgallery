@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
+    {% include 'search_form.html' %}
     {% for collection in collections %}
     <div class="gallery">
       <a href="{{ url_for('show_collection', name=collection) }}"><img src="{{ url_for('media') }}/collections/{{ collection }}.jpg" loading="lazy" alt="{{ collection }}"></a>

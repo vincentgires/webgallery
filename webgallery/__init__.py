@@ -110,45 +110,57 @@ def delete_media():
     pass
 
 
-@app.route('/')
-def index():
-    collections_path = os.path.join(get_media_folderpath(), 'collections')
-    collections = []
-    for i in get_json_files('collections'):
-        with open(os.path.join(collections_path, i)) as f:
-            data = json.load(f)
-            if data.get('private', False):
-                continue
-            image = os.path.splitext(i)[0]
-            collections.append(image)
-    return render_template('index.html', collections=collections)
-
-
-@app.route('/search', methods=['GET', 'POST'])
-@app.route('/recherche', methods=['GET', 'POST'])
-def search():
+def _get_available_tags():
     connexion = sqlite3.connect(get_database_path())
     cursor = connexion.cursor()
     cursor.execute('select name from tags')
     available_tags = sorted([r[0] for r in cursor.fetchall()])
     connexion.close()
+    return available_tags
 
+
+def _post_search():
+    args = {}
+    tags = request.form.get('tags')
+    date = request.form.get('date')
+    to_date = request.form.get('to_date')
+    if tags:
+        tags = [t.lstrip() for t in tags.split(',')]
+        args['tag'] = tags
+    if date:
+        args['date'] = date
+    if to_date:
+        args['to_date'] = to_date
+    return redirect(url_for('search', **args))
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
     if request.method == 'POST':
-        args = {}
-        tags = request.form.get('tags')
-        date = request.form.get('date')
-        to_date = request.form.get('to_date')
-        if tags:
-            tags = [t.lstrip() for t in tags.split(',')]
-            args['tag'] = tags
-        if date:
-            args['date'] = date
-        if to_date:
-            args['to_date'] = to_date
-        return redirect(url_for('search', **args))
+        return _post_search()
 
     elif request.method == 'GET':
-        # adress.net/search?tag=value&tag=value
+        collections_path = os.path.join(get_media_folderpath(), 'collections')
+        collections = []
+        for i in get_json_files('collections'):
+            with open(os.path.join(collections_path, i)) as f:
+                data = json.load(f)
+                if data.get('private', False):
+                    continue
+                image = os.path.splitext(i)[0]
+                collections.append(image)
+        return render_template(
+            'index.html', collections=collections,
+            available_tags=_get_available_tags())
+
+
+@app.route('/search', methods=['GET', 'POST'])
+@app.route('/recherche', methods=['GET', 'POST'])
+def search():
+    if request.method == 'POST':
+        return _post_search()
+
+    elif request.method == 'GET':
         tags = request.args.getlist('tag')
         tags = [t.lstrip() for t in tags]
         date = request.args.get('date')
@@ -156,7 +168,7 @@ def search():
         # images = find_images_from_json(tags, date, to_date)
         images = find_images_from_database(tags, date, to_date)
         return render_template(
-            'search.html', images=images, available_tags=available_tags)
+            'search.html', images=images, available_tags=_get_available_tags())
 
 
 @app.route('/collections/<name>')
@@ -246,5 +258,5 @@ def create_or_update_database_from_json():
 
 
 if __name__ == '__main__':
-    # create_or_update_database_from_json()
+    create_or_update_database_from_json()
     app.run(debug=True)

@@ -1,0 +1,11 @@
+<form method="post" enctype="multipart/form-data">
+    tags <input list="tags" name="tags" value="{{ ', '.join(request.args.getlist('tag')) }}">
+    <datalist id="tags">
+    {% for t in available_tags %}
+    <option value="{{t}}" />
+    {% endfor %}
+    </datalist>
+    date <input type="date" name="date" value="{{ request.args.get('date') }}">
+    to <input type="date" name="to_date" value="{{ request.args.get('to_date') }}">
+    <input type="submit" value="search">
+</form>
