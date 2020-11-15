@@ -27,8 +27,9 @@ def get_json_files(category):
 
 
 def get_database_path():
-    if os.environ.get('GALLERY_PATH') is not None:
-        return os.path.join(os.environ.get('GALLERY_PATH'), 'database.db')
+    gallery_path = os.environ.get('GALLERY_PATH')
+    if gallery_path is not None:
+        return os.path.join(gallery_path, 'database.db')
     else:
         return 'database.db'
 
