@@ -21,9 +21,13 @@ def get_media_folderpath():
     return folderpath
 
 
-def get_json_files(category):
-    path = os.path.join(get_media_folderpath(), category)
-    return [i for i in sorted(os.listdir(path)) if i.endswith('.json')]
+def get_json_files(directory):
+    path = os.path.join(get_media_folderpath(), directory)
+    if not os.path.exists(path):
+        return []
+    return [
+        os.path.join(path, i)
+        for i in sorted(os.listdir(path)) if i.endswith('.json')]
 
 
 def get_database_path():
@@ -37,12 +41,11 @@ def get_database_path():
 def find_images_from_json(tags=None, date=None, to_date=None):
     tags_images = []
     date_images = []
-    photos_path = os.path.join(get_media_folderpath(), 'photos')
-    for j in get_json_files('photos'):
-        with open(os.path.join(photos_path, j)) as f:
+    for json_path in get_json_files(os.path.join('photos', 'info')):
+        with open(json_path) as f:
             data = json.load(f)
         # json root name should be the image filename
-        image = os.path.splitext(j)[0]
+        image = os.path.splitext(os.path.basename(json_path))[0]
         if tags is not None:
             if all(x in data['tags'] for x in tags):
                 tags_images.append(image)
@@ -141,14 +144,13 @@ def index():
         return _post_search()
 
     elif request.method == 'GET':
-        collections_path = os.path.join(get_media_folderpath(), 'collections')
         collections = []
-        for i in get_json_files('collections'):
-            with open(os.path.join(collections_path, i)) as f:
+        for json_path in get_json_files('collections'):
+            with open(json_path) as f:
                 data = json.load(f)
                 if data.get('private', False):
                     continue
-                image = os.path.splitext(i)[0]
+                image = os.path.splitext(json_path)[0]
                 collections.append(image)
         return render_template(
             'index.html', collections=collections,
@@ -219,11 +221,10 @@ def create_or_update_database_from_json():
         'create table if not exists '
         'tagged_images(image_filename text, tag_id text)')
 
-    photos_path = os.path.join(get_media_folderpath(), 'photos')
-    for j in get_json_files('photos'):
-        with open(os.path.join(photos_path, j)) as f:
+    for json_path in get_json_files(os.path.join('photos', 'info')):
+        with open(json_path) as f:
             data = json.load(f)
-        filename = os.path.splitext(j)[0]
+        filename = os.path.splitext(os.path.basename(json_path))[0]
         date = data['exifs']['datetime_taken']
         # convert date to interpretable format for sqlite
         dt = datetime.strptime(date, '%Y:%m:%d %H:%M:%S')
