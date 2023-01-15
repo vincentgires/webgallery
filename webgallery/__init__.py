@@ -150,7 +150,7 @@ def index():
                 data = json.load(f)
                 if data.get('private', False):
                     continue
-                image = os.path.splitext(json_path)[0]
+                image = os.path.splitext(os.path.basename(json_path))[0]
                 collections.append(image)
         return render_template(
             'index.html', collections=collections,
